@@ -35,6 +35,10 @@ private:
 public:
   Monte() = default;
 
+  static std::size_t iterations(void) {
+    return m_totalBlockNum * MONTEC_BLOCK_COUNT;
+  }
+
   static void set_params(std::size_t iteration_count, std::size_t thread_num) noexcept {
     m_totalBlockNum = MONTEC_ITER_TO_BLOCK(iteration_count);
     m_handledBlockCount = 0;
