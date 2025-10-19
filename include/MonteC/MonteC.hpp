@@ -5,6 +5,7 @@
 #include <array>
 #include <thread>
 #include <vector>
+#include <optional>
 
 #include "sum.hpp"
 
@@ -17,19 +18,19 @@ namespace mc {
 
 namespace detail {
 
-template<class Func, class Cond, class input_t, class out_t>
+template<class Func, class input_t, class out_t>
 class MonteThread;
 
 }
 
-template<class Func, class Cond, class input_t, class out_t>
+template<class Func, class input_t, class out_t>
 class Monte {
 private:
   static std::size_t m_totalBlockNum;
   static std::atomic<std::size_t> m_handledBlockCount;
 
-  static detail::MonteThread<Func, Cond, input_t, out_t> m_mainThread;
-  static std::vector<detail::MonteThread<Func, Cond, input_t, out_t>> m_threads;
+  static detail::MonteThread<Func, input_t, out_t> m_mainThread;
+  static std::vector<detail::MonteThread<Func, input_t, out_t>> m_threads;
 
 public:
   Monte() = delete;
@@ -84,10 +85,10 @@ public:
 
 namespace detail {
 
-template<class Func, class Cond, class input_t, class out_t>
+template<class Func, class input_t, class out_t>
 class MonteThread {
 private:
-  using Monty = Monte<Func, Cond, input_t, out_t>;
+  using Monty = Monte<Func, input_t, out_t>;
   // only counts successful iterations based on the Cond functor
   std::size_t m_iterCount{0};
   Sum<out_t> m_sum;
@@ -109,9 +110,10 @@ public:
 
   void proccessBlock(void) noexcept {
     for (const auto& input : m_inputs) {
-      if (Cond(input)) {
-        m_sum.add(Func(input));
+      std::optional<out_t> res = Func(input);
+      if (res.has_value()) {
         m_iterCount++;
+        m_sum.add(res.value());
       }
     }
   }
