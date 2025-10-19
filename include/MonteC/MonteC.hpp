@@ -33,15 +33,19 @@ private:
   static std::vector<detail::MonteThread<Func, input_t, out_t>> m_threads;
 
 public:
-  Monte() = delete;
+  Monte() = default;
 
-  Monte(std::size_t iteration_count, std::size_t thread_num) noexcept
-  {
-    m_totalBlockNum = iteration_count;
+  static void set_params(std::size_t iteration_count, std::size_t thread_num) noexcept {
+    m_totalBlockNum = MONTEC_ITER_TO_BLOCK(iteration_count);
     m_handledBlockCount = 0;
     // minus 1 since main thread is handled by iteself
     m_threads.resize(thread_num - 1);
   }
+
+  Monte(std::size_t iteration_count, std::size_t thread_num) noexcept {
+    set_params(iteration_count, thread_num);
+  }
+
 
   static out_t run(void) noexcept {
     for (auto& thread : m_threads) {
