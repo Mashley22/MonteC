@@ -89,7 +89,8 @@ template<class Func, class Cond, class input_t, class out_t, int thread_num>
 class MonteThread {
 private:
   using Monty = Monte<Func, Cond, input_t, out_t, thread_num>;
-  std::size_t m_blockCount{0};
+  // only counts successful iterations based on the Cond functor
+  std::size_t m_iterCount{0};
   Sum<out_t> m_sum;
   std::array<input_t, MONTEC_BLOCK_COUNT> m_inputs;
   std::jthread m_thread;
@@ -98,7 +99,7 @@ private:
 public:
 
   out_t weightedSum(void) const noexcept {
-    return m_sum.val() * m_blockCount;
+    return m_sum.val() * m_iterCount;
   }
 
   void genInputBlock(void) noexcept {
@@ -109,14 +110,16 @@ public:
 
   void proccessBlock(void) noexcept {
     for (const auto& input : m_inputs) {
-      m_sum.add(Func(input));
+      if (Cond(input)) {
+        m_sum.add(Func(input));
+        m_iterCount++;
+      }
     }
   }
 
 private:
   void mainLoop(void) noexcept {
     while (Monty::get_nextBlock() == true) {
-      m_blockCount++;
       genInputBlock();
       proccessBlock();
     }
