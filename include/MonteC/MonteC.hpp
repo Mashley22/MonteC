@@ -4,6 +4,7 @@
 #include <atomic>
 #include <array>
 #include <thread>
+#include <vector>
 
 #include "sum.hpp"
 
@@ -16,31 +17,29 @@ namespace mc {
 
 namespace detail {
 
-template<class Func, class Cond, class input_t, class out_t, int thread_num>
+template<class Func, class Cond, class input_t, class out_t>
 class MonteThread;
 
 }
 
-template<class Func, class Cond, class input_t, class out_t, int thread_num>
+template<class Func, class Cond, class input_t, class out_t>
 class Monte {
 private:
   static std::size_t m_totalBlockNum;
   static std::atomic<std::size_t> m_handledBlockCount;
 
-  static detail::MonteThread<Func, Cond, input_t, out_t, thread_num> m_mainThread;
-  static std::array<detail::MonteThread<Func, Cond, input_t, out_t, thread_num>, thread_num - 1> m_threads;
-
-  out_t proccessResult(void) {
-
-  }
+  static detail::MonteThread<Func, Cond, input_t, out_t> m_mainThread;
+  static std::vector<detail::MonteThread<Func, Cond, input_t, out_t>> m_threads;
 
 public:
   Monte() = delete;
 
-  Monte(std::size_t iteration_count) noexcept
+  Monte(std::size_t iteration_count, std::size_t thread_num) noexcept
   {
-    m_totalBlockNum = iteration_count ;
+    m_totalBlockNum = iteration_count;
     m_handledBlockCount = 0;
+    // minus 1 since main thread is handled by iteself
+    m_threads.resize(thread_num - 1);
   }
 
   static out_t run(void) noexcept {
@@ -66,7 +65,7 @@ public:
       result += thread.weightedSum();
     }
 
-    return result / m_totalBlockNum;
+    return result / (m_totalBlockNum * MONTEC_BLOCK_COUNT);
   }
   
   /**@brief returns whether the thread should proccess another block
@@ -85,10 +84,10 @@ public:
 
 namespace detail {
 
-template<class Func, class Cond, class input_t, class out_t, int thread_num>
+template<class Func, class Cond, class input_t, class out_t>
 class MonteThread {
 private:
-  using Monty = Monte<Func, Cond, input_t, out_t, thread_num>;
+  using Monty = Monte<Func, Cond, input_t, out_t>;
   // only counts successful iterations based on the Cond functor
   std::size_t m_iterCount{0};
   Sum<out_t> m_sum;
