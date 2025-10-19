@@ -137,7 +137,7 @@ private:
 public:
   void start(void) noexcept {
     m_active.store(true, std::memory_order_seq_cst);
-    m_thread = std::jthread(this->mainLoop);
+    m_thread = std::jthread(this->mainLoop());
     m_active.store(false, std::memory_order_seq_cst);
   }
 

@@ -5,6 +5,7 @@ namespace mc {
 
 template<class T>
 class Sum {
+public:
   Sum(void) = default;
   Sum(const T& val) : m_sum(val) {}
 
