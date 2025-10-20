@@ -13,8 +13,8 @@ public:
 
   void add(const T& val) {
     // Kahan
-    double y = val - m_compensation;
-    double t = m_sum + y;
+    T y = val - m_compensation;
+    T t = m_sum + y;
     m_compensation = (t - m_sum) - y;
     m_sum = t;
   };
