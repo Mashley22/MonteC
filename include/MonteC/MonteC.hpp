@@ -53,6 +53,10 @@ public:
     set_params(iteration_count, thread_num);
   }
 
+  static std::size_t totalBlockNum(void) noexcept {
+    return m_totalBlockNum;
+  }
+
 
   static out_t run(void) noexcept {
     for (auto& thread : m_threads) {
@@ -77,7 +81,7 @@ public:
       result += thread.weightedSum();
     }
     
-    return result / m_totalBlockNum;
+    return result / (m_totalBlockNum * MONTEC_BLOCK_COUNT);
   }
   
   /**@brief returns whether the thread should proccess another block
@@ -113,7 +117,7 @@ public:
   MonteThread(const MonteThread& other) : m_active(other.m_active.load()) {}
 
   out_t weightedSum(void) const noexcept {
-    return m_sum.val() * m_blockCount;
+    return m_sum.val() * m_blockCount / Monty::totalBlockNum();
   }
   
   void genInputBlock(void) noexcept {
